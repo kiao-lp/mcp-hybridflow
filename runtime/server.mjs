@@ -22089,9 +22089,10 @@ function registerHybridflowTools(server, hybridflow) {
       handle: HANDLE,
       id: external_exports.string().describe("Source workflow class id from workflow_class_list."),
       spot: SPOT.optional(),
-      bodies: BODIES
+      bodies: BODIES,
+      agents: external_exports.record(external_exports.string(), AGENT_ID).optional().describe("Explicit task agent IDs keyed by source class ID.")
     }
-  }, guard(async ({ handle, id, spot, bodies }) => ok(await hybridflow.instantiateWorkflowClass(handle, id, { spot, bodies }))));
+  }, guard(async ({ handle, id, spot, bodies, agents }) => ok(await hybridflow.instantiateWorkflowClass(handle, id, { spot, bodies, agents }))));
   server.registerTool("class_list", {
     description: "List node classes across boards; use class_get for versions.",
     inputSchema: {}
@@ -22107,7 +22108,6 @@ function registerHybridflowTools(server, hybridflow) {
       body: external_exports.string().optional().describe("First version description."),
       criteria: CRITERIA.optional(),
       template: external_exports.boolean().optional().describe("First version is a fill-in template."),
-      agent: external_exports.string().optional().describe("First version default managed agent id (AI)."),
       at: AT.optional(),
       duration: DURATION.optional(),
       spot: SPOT.optional(),
@@ -22169,10 +22169,9 @@ function registerHybridflowTools(server, hybridflow) {
       body: external_exports.string().optional().describe("The description."),
       criteria: CRITERIA.optional(),
       template: external_exports.boolean().optional().describe("Fill body during instantiation."),
-      agent: external_exports.string().optional().describe("Default managed agent id (AI)."),
       from: external_exports.string().optional().describe("Source version id; omit for a blank draft.")
     }
-  }, guard(async ({ handle, id, body, criteria, template, agent, from }) => ok(await hybridflow.createClassVersion(handle, id, { body, criteria, template, agent, from }))));
+  }, guard(async ({ handle, id, body, criteria, template, from }) => ok(await hybridflow.createClassVersion(handle, id, { body, criteria, template, from }))));
   server.registerTool("class_patch_version", {
     description: "Patch or publish a draft version. Published versions are immutable.",
     inputSchema: {
@@ -22183,7 +22182,6 @@ function registerHybridflowTools(server, hybridflow) {
         body: external_exports.string().optional().describe("New description."),
         criteria: CRITERIA.optional(),
         template: external_exports.boolean().optional().describe("Fill body during instantiation."),
-        agent: external_exports.string().optional().describe("The default agent."),
         status: external_exports.enum(["draft", "published"]).optional().describe("Publish the version.")
       }).strict().describe("The fields to change."),
       ifMatch: IF_MATCH
@@ -22199,9 +22197,10 @@ function registerHybridflowTools(server, hybridflow) {
       handle: HANDLE,
       id: CLASS_ID,
       spot: SPOT.optional(),
-      bodies: BODIES
+      bodies: BODIES,
+      agents: external_exports.record(external_exports.string(), AGENT_ID).optional().describe("Explicit task agent IDs keyed by source class ID.")
     }
-  }, guard(async ({ handle, id, spot, bodies }) => ok(await hybridflow.instantiateFlowNodeClass(handle, id, { spot, bodies }))));
+  }, guard(async ({ handle, id, spot, bodies, agents }) => ok(await hybridflow.instantiateFlowNodeClass(handle, id, { spot, bodies, agents }))));
   server.registerTool("agent_list", {
     description: "List active managed agents with drafts and latest publications. Select using the published description.",
     inputSchema: { archived: external_exports.boolean().optional().describe("Include archived agents.") }
