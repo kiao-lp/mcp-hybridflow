@@ -1,0 +1,35 @@
+lockfile_version: '1'
+apm_version: 0.35.1
+dependencies: []
+deployments:
+- kind: uri
+  target: mcp
+  value: kiao-hybridflow
+  runtime: claude
+  scope: project
+  owners:
+  - .
+  active_owner: .
+  content_hash: sha256:18b8c2e9ce58c99af975d36419bd72604a4725f8e114da3ef56c7aa9010fe0ec
+- kind: uri
+  target: mcp
+  value: kiao-hybridflow
+  runtime: codex
+  scope: project
+  owners:
+  - .
+  active_owner: .
+  content_hash: sha256:8451bddfc1c549b499228d5eb37ad3638beb8269c646b5082c4f6e7dc4885864
+mcp_servers:
+- kiao-hybridflow
+mcp_configs:
+  kiao-hybridflow:
+    name: kiao-hybridflow
+    transport: stdio
+    registry: false
+    command: kiao-mcp-hybridflow
+mcp_target_servers:
+  claude:
+  - kiao-hybridflow
+  codex:
+  - kiao-hybridflow

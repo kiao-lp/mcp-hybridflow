@@ -7,11 +7,7 @@
     "claude"
   ],
   "dependencies": {
-    "apm": [
-      {
-        "path": "../mcp-kiao"
-      }
-    ],
+    "apm": [],
     "mcp": [
       {
         "name": "kiao-hybridflow",

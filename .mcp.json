@@ -1,0 +1,9 @@
+{
+  "mcpServers": {
+    "kiao-hybridflow": {
+      "type": "stdio",
+      "command": "kiao-mcp-hybridflow",
+      "args": []
+    }
+  }
+}
