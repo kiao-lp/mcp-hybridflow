@@ -1,0 +1,24 @@
+{
+  "name": "mcp-hybridflow",
+  "version": "1.0.0",
+  "description": "KIAO hybridflow MCP server",
+  "targets": [
+    "codex",
+    "claude"
+  ],
+  "dependencies": {
+    "apm": [
+      {
+        "path": "../mcp-kiao"
+      }
+    ],
+    "mcp": [
+      {
+        "name": "kiao-hybridflow",
+        "registry": false,
+        "transport": "stdio",
+        "command": "kiao-mcp-hybridflow"
+      }
+    ]
+  }
+}
