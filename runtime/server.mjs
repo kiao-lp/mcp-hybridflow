@@ -22212,11 +22212,12 @@ function registerHybridflowTools(server, hybridflow) {
       name: external_exports.string().describe("Unique agent name."),
       harness: external_exports.enum(["claude", "codex", "muse", "pi"]).describe("Agent harness."),
       profileId: external_exports.string().optional().describe("Runner execution profile id; see the agents reference."),
-      model: external_exports.string().optional().describe("Model id; empty uses CLI default."),
+      model: external_exports.string().optional().describe("Model id. Required before native-agent publication."),
+      effort: external_exports.string().optional().describe("Default effort. Required before native-agent publication."),
       instructions: external_exports.string().optional().describe("Standing instructions sent to turns."),
       description: external_exports.string().optional().describe("Selection guidance; not sent to turns.")
     }
-  }, guard(async ({ name, harness, profileId, model, description, instructions }) => ok(await hybridflow.createAgent({ name, harness, profileId, model, description, instructions }))));
+  }, guard(async ({ name, harness, profileId, model, effort, description, instructions }) => ok(await hybridflow.createAgent({ name, harness, profileId, model, effort, description, instructions }))));
   server.registerTool("agent_get", {
     description: "Read one managed agent.",
     inputSchema: { id: AGENT_ID }
@@ -22230,6 +22231,7 @@ function registerHybridflowTools(server, hybridflow) {
         name: external_exports.string().optional().describe("New unique name."),
         harness: external_exports.enum(["claude", "codex", "muse", "pi"]).optional().describe("New engine."),
         profileId: external_exports.string().optional().describe("New execution profile reference."),
+        effort: external_exports.string().optional().describe("New default effort."),
         model: external_exports.string().optional().describe("New model, or empty for the CLI's own default."),
         instructions: external_exports.string().optional().describe("New standing orders."),
         description: external_exports.string().optional().describe("Selection guidance; empty clears.")
