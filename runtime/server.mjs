@@ -21558,8 +21558,19 @@ var WorkerClient = class _WorkerClient {
   deleteAgent(id, confirmation) {
     return this.boardsVoid("DELETE", `/hybridflow-runner/agents/${encodeURIComponent(id)}?confirmation=${encodeURIComponent(confirmation)}`);
   }
-  publishAgent(id, ifMatch) {
-    return this.boardsJson("POST", `/hybridflow-runner/agents/${encodeURIComponent(id)}/publish`, {}, _WorkerClient.ifMatch(ifMatch));
+  async publishAgent(id, ifMatch, confirmation) {
+    const path = `/hybridflow-runner/agents/${encodeURIComponent(id)}/publish`;
+    const response = await this.req(path, {
+      method: "POST",
+      headers: { "Content-Type": "application/json", ..._WorkerClient.ifMatch(ifMatch) },
+      body: JSON.stringify({ confirmation })
+    });
+    if (response.status === 409) {
+      const result = await response.clone().json().catch(() => null);
+      if (result?.pushConfirmation?.token) return result;
+    }
+    if (!response.ok) throw new WorkerError(await boardsFailure(path, response), response.status, response.statusText);
+    return response.json();
   }
   agentVersions(id) {
     return this.boardsJson("GET", `/hybridflow-runner/agents/${encodeURIComponent(id)}/versions`);
@@ -22242,9 +22253,13 @@ function registerHybridflowTools(server, hybridflow) {
     }
   }, guard(async ({ id, patch, ifMatch }) => ok(await hybridflow.patchAgent(id, patch, ifMatch))));
   server.registerTool("agent_publish", {
-    description: "Resolve APM dependencies, compile, commit, tag and push the agent release when a remote exists.",
-    inputSchema: { id: AGENT_ID, ifMatch: IF_MATCH }
-  }, guard(async ({ id, ifMatch }) => ok(await hybridflow.publishAgent(id, ifMatch))));
+    description: "Publish an agent release. If pushConfirmation is returned, present its dependencies to the owner before retrying.",
+    inputSchema: {
+      id: AGENT_ID,
+      ifMatch: IF_MATCH,
+      confirmation: external_exports.string().optional().describe("Push confirmation token, supplied after the owner accepts the warning.")
+    }
+  }, guard(async ({ id, ifMatch, confirmation }) => ok(await hybridflow.publishAgent(id, ifMatch, confirmation))));
   server.registerTool("agent_versions", {
     description: "Read Git agent publications, oldest first.",
     inputSchema: { id: AGENT_ID }
@@ -22542,8 +22557,8 @@ var HybridflowApi = class _HybridflowApi {
   async getAgent(id) {
     return this.files.getAgent(_HybridflowApi.id(id, "Agent"));
   }
-  async publishAgent(id, ifMatch) {
-    return this.files.publishAgent(_HybridflowApi.id(id, "Agent"), ifMatch);
+  async publishAgent(id, ifMatch, confirmation) {
+    return this.files.publishAgent(_HybridflowApi.id(id, "Agent"), ifMatch, confirmation);
   }
   async agentVersions(id) {
     return this.files.agentVersions(_HybridflowApi.id(id, "Agent"));
