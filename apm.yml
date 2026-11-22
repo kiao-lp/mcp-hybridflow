@@ -1,6 +1,6 @@
 {
   "name": "mcp-hybridflow",
-  "version": "1.0.4",
+  "version": "1.0.5",
   "description": "KIAO hybridflow MCP server",
   "targets": [
     "codex",
