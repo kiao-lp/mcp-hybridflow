@@ -21210,6 +21210,10 @@ var WorkerClient = class _WorkerClient {
   getFileInfo(path) {
     return this.json("/info", void 0, { path });
   }
+  async checkStore() {
+    const root = await this.getFileInfo("/");
+    if (!root?.isDirectory) throw new Error("The worker file API cannot read the store root.");
+  }
   async getFileText(path) {
     const res = await this.req("/getFile", void 0, { path });
     if (!res.ok) throw new WorkerError(`getFile failed: ${res.status} ${res.statusText}`, res.status, res.statusText);
@@ -21558,12 +21562,12 @@ var WorkerClient = class _WorkerClient {
   deleteAgent(id, confirmation) {
     return this.boardsVoid("DELETE", `/hybridflow-runner/agents/${encodeURIComponent(id)}?confirmation=${encodeURIComponent(confirmation)}`);
   }
-  async publishAgent(id, ifMatch, confirmation) {
+  async publishAgent(id, ifMatch, confirmation, bump) {
     const path = `/hybridflow-runner/agents/${encodeURIComponent(id)}/publish`;
     const response = await this.req(path, {
       method: "POST",
       headers: { "Content-Type": "application/json", ..._WorkerClient.ifMatch(ifMatch) },
-      body: JSON.stringify({ confirmation })
+      body: JSON.stringify({ confirmation, bump })
     });
     if (response.status === 409) {
       const result = await response.clone().json().catch(() => null);
@@ -21837,13 +21841,21 @@ function schedule(directory, build) {
 }
 
 // src/server.ts
-async function startServer(name, register) {
+async function startServer(name, register, diagnose) {
   const config2 = loadConfig();
   const tokens = tokenProvider(config2);
   const files = new WorkerClient(config2, tokens);
   const server = new McpServer({ name, version: "0.0.1" });
   installToolLogging(server, name, config2);
-  register({ server, files, config: config2, tokens });
+  const context = { server, files, config: config2, tokens };
+  register(context);
+  if (diagnose && process.env.KIAO_MCP_DIAGNOSTIC === "1") {
+    try {
+      await diagnose(context);
+    } catch (err) {
+      throw new Error(`Internal diagnostic failed for ${name}. ${err instanceof Error ? err.message : String(err)}`);
+    }
+  }
   const transport = new StdioServerTransport();
   await server.connect(transport);
   process.stderr.write(`[${name}] connected \u2014 worker: ${config2.workerUrl} (${credentialLabel(config2)})
@@ -22257,9 +22269,10 @@ function registerHybridflowTools(server, hybridflow) {
     inputSchema: {
       id: AGENT_ID,
       ifMatch: IF_MATCH,
+      bump: external_exports.enum(["major", "minor", "patch"]).optional().describe("Version component to increase. Defaults to patch."),
       confirmation: external_exports.string().optional().describe("Push confirmation token, supplied after the owner accepts the warning.")
     }
-  }, guard(async ({ id, ifMatch, confirmation }) => ok(await hybridflow.publishAgent(id, ifMatch, confirmation))));
+  }, guard(async ({ id, ifMatch, confirmation, bump }) => ok(await hybridflow.publishAgent(id, ifMatch, confirmation, bump))));
   server.registerTool("agent_versions", {
     description: "Read Git agent publications, oldest first.",
     inputSchema: { id: AGENT_ID }
@@ -22557,8 +22570,8 @@ var HybridflowApi = class _HybridflowApi {
   async getAgent(id) {
     return this.files.getAgent(_HybridflowApi.id(id, "Agent"));
   }
-  async publishAgent(id, ifMatch, confirmation) {
-    return this.files.publishAgent(_HybridflowApi.id(id, "Agent"), ifMatch, confirmation);
+  async publishAgent(id, ifMatch, confirmation, bump) {
+    return this.files.publishAgent(_HybridflowApi.id(id, "Agent"), ifMatch, confirmation, bump);
   }
   async agentVersions(id) {
     return this.files.agentVersions(_HybridflowApi.id(id, "Agent"));
@@ -22635,7 +22648,10 @@ var isEntry = process.argv[1] && import.meta.url === pathToFileURL(process.argv[
 if (isEntry) {
   startServer(
     "kiao-hybridflow",
-    ({ server, files }) => registerHybridflowTools(server, new HybridflowApi(files))
+    ({ server, files }) => registerHybridflowTools(server, new HybridflowApi(files)),
+    async ({ files }) => {
+      await new HybridflowApi(files).listBoards();
+    }
   ).catch((err) => {
     process.stderr.write(`[kiao-hybridflow] fatal: ${err instanceof Error ? err.stack ?? err.message : String(err)}
 `);
