@@ -21891,7 +21891,7 @@ var CLASS_ID = external_exports.string().describe("Node class id from board_get/
 var VERSION_ID = external_exports.string().describe("Version id from class_get.");
 var WORKFLOW_ID = external_exports.string().describe("Workflow id from board_get.");
 var AGENT_ID = external_exports.string().describe("Managed agent id from agent_list.");
-var TYPE = external_exports.enum(["human", "ai", "shutdown", "scheduler", "gateway", "note", "value"]).describe("Card type. See hybridflow references/cards.md.");
+var TYPE = external_exports.enum(["human", "ai", "shutdown", "scheduler", "gateway", "exclusive-gateway", "note", "value"]).describe("Card type. See hybridflow references/cards.md.");
 var CLASS_TYPE = external_exports.enum(["human", "ai", "shutdown", "scheduler"]);
 var NOTE = external_exports.string().describe("Note card Markdown.");
 var VALUE = external_exports.unknown().describe("Value card JSON payload.");
@@ -21933,6 +21933,10 @@ var ON_SUCCESS = external_exports.object({
   mode: external_exports.enum(["end", "continue"]).optional().describe("AI conversation handover; default end."),
   compact: external_exports.boolean().optional().describe("Compact the AI conversation after success.")
 }).strict().describe("Whole replacement; preserve other options. See hybridflow references/chains.md.");
+var ROUTES = external_exports.array(external_exports.object({
+  condition: external_exports.string().describe("CEL expression that reads the predecessor JSON as input and returns a boolean."),
+  flowNode: external_exports.string().describe("Successor card id from onSuccess.flowNodes.")
+}).strict()).describe("Exclusive gateway routes. First true condition wins. Replaces the whole ordered list.");
 var IF_MATCH = external_exports.number().int().optional().describe("Revision from the read; send for derived writes. On 409, read again.");
 var CLASS_ON_SUCCESS = external_exports.object({
   flowNode: external_exports.string().optional().describe("Successor class id, never a version or card id."),
@@ -21958,6 +21962,7 @@ var CARD_FIELDS = {
   status: STATUS.optional(),
   archived: external_exports.boolean().optional().describe("Hide or restore the card."),
   onSuccess: ON_SUCCESS.optional(),
+  routes: ROUTES.optional(),
   workflow: external_exports.string().optional().describe("Workflow group id on this board; empty ungroups.")
 };
 function registerHybridflowTools(server, hybridflow) {
