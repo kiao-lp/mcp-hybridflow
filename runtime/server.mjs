@@ -21487,6 +21487,19 @@ var WorkerClient = class _WorkerClient {
       `${_WorkerClient.boardPath(handle)}/workflows/${encodeURIComponent(id)}`
     );
   }
+  copyWorkflow(handle, id) {
+    return this.boardsJson(
+      "GET",
+      `${_WorkerClient.boardPath(handle)}/workflows/${encodeURIComponent(id)}/clipboard`
+    );
+  }
+  pasteWorkflow(handle, clipboard, spot) {
+    return this.boardsJson(
+      "POST",
+      `${_WorkerClient.boardPath(handle)}/workflows/clipboard`,
+      { clipboard, spot }
+    );
+  }
   patchWorkflow(handle, id, patch, ifMatch) {
     return this.boardsJson(
       "PATCH",
@@ -22086,6 +22099,23 @@ function registerHybridflowTools(server, hybridflow) {
     description: "Read one workflow group.",
     inputSchema: { handle: HANDLE, id: WORKFLOW_ID }
   }, guard(async ({ handle, id }) => ok(await hybridflow.getWorkflow(handle, id))));
+  server.registerTool("workflow_copy", {
+    description: "Copy a workflow and all its cards as JSON for workflow_paste or Dashboard Paste. See hybridflow references/reuse/copying.md.",
+    inputSchema: { handle: HANDLE, id: WORKFLOW_ID }
+  }, guard(async ({ handle, id }) => ok(await hybridflow.copyWorkflow(handle, id))));
+  server.registerTool("workflow_paste", {
+    description: "Create an independent workflow from clipboard JSON. The store remaps card references and returns the new workflow and cards.",
+    inputSchema: {
+      handle: HANDLE,
+      clipboard: external_exports.object({
+        kind: external_exports.literal("kiao-workflow"),
+        version: external_exports.literal(1),
+        workflow: external_exports.object({ name: external_exports.string() }).strict(),
+        flowNodes: external_exports.array(external_exports.object({ id: external_exports.string() }).passthrough())
+      }).strict().describe("The complete JSON object from workflow_copy or Dashboard Copy workflow as JSON."),
+      spot: SPOT.optional().describe("Preferred top-left position in canvas pixels. Omit to place below existing cards.")
+    }
+  }, guard(async ({ handle, clipboard, spot }) => ok(await hybridflow.pasteWorkflow(handle, clipboard, spot))));
   server.registerTool("workflow_patch", {
     description: "Rename a workflow group without changing membership.",
     inputSchema: {
@@ -22524,6 +22554,12 @@ var HybridflowApi = class _HybridflowApi {
   /** Read one workflow. */
   async getWorkflow(handle, id) {
     return this.files.getWorkflow(_HybridflowApi.handle(handle), _HybridflowApi.id(id, "Workflow"));
+  }
+  async copyWorkflow(handle, id) {
+    return this.files.copyWorkflow(_HybridflowApi.handle(handle), _HybridflowApi.id(id, "Workflow"));
+  }
+  async pasteWorkflow(handle, clipboard, spot) {
+    return this.files.pasteWorkflow(_HybridflowApi.handle(handle), clipboard, spot);
   }
   /** Rename a workflow. Its members are untouched. */
   async patchWorkflow(handle, id, patch, ifMatch) {
