@@ -21891,7 +21891,7 @@ var CLASS_ID = external_exports.string().describe("Node class id from board_get/
 var VERSION_ID = external_exports.string().describe("Version id from class_get.");
 var WORKFLOW_ID = external_exports.string().describe("Workflow id from board_get.");
 var AGENT_ID = external_exports.string().describe("Managed agent id from agent_list.");
-var TYPE = external_exports.enum(["human", "ai", "shutdown", "scheduler", "gateway", "exclusive-gateway", "note", "value"]).describe("Card type. See hybridflow references/cards.md.");
+var TYPE = external_exports.enum(["human", "ai", "shutdown", "scheduler", "bitbucket-pr-status", "gateway", "exclusive-gateway", "note", "value"]).describe("Card type. See hybridflow references/cards.md.");
 var CLASS_TYPE = external_exports.enum(["human", "ai", "shutdown", "scheduler"]);
 var NOTE = external_exports.string().describe("Note card Markdown.");
 var VALUE = external_exports.unknown().describe("Value card JSON payload.");
@@ -21922,6 +21922,8 @@ var SETTINGS = external_exports.object({
 }).strict().describe("Execution settings; whole replacement, including runner and extra.");
 var AT = external_exports.string().describe("Scheduler local YYYY-MM-DDTHH:mm; alternative to duration. Empty clears.");
 var DURATION = external_exports.string().describe("Scheduler positive h/m/s/ms wait, e.g. 15m; alternative to at. Empty clears.");
+var PULL_REQUEST_ID = external_exports.string().describe("Bitbucket pull request number or workspace/repository#number. Empty clears.");
+var PULL_REQUEST_STATUS = external_exports.enum(["OPEN", "MERGED", "DECLINED", "SUPERSEDED", ""]).describe("Bitbucket pull request status to wait for. Empty clears.");
 var SPOT = external_exports.object({
   x: external_exports.number().int().min(0).describe("Canvas x in pixels."),
   y: external_exports.number().int().min(0).describe("Canvas y in pixels.")
@@ -21958,6 +21960,8 @@ var CARD_FIELDS = {
   settings: SETTINGS.optional(),
   at: AT.optional(),
   duration: DURATION.optional(),
+  pullRequestId: PULL_REQUEST_ID.optional(),
+  pullRequestStatus: PULL_REQUEST_STATUS.optional(),
   spot: SPOT.optional(),
   status: STATUS.optional(),
   archived: external_exports.boolean().optional().describe("Hide or restore the card."),
