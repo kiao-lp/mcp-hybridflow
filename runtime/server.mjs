@@ -21900,6 +21900,7 @@ var TYPE = external_exports.enum([
   "bitbucket-commit-status",
   "gateway",
   "exclusive-gateway",
+  "limiter",
   "note",
   "value"
 ]).describe("Card type. See hybridflow references/cards.md.");
@@ -21937,6 +21938,7 @@ var PULL_REQUEST_ID = external_exports.string().describe("Bitbucket pull request
 var PULL_REQUEST_STATUS = external_exports.enum(["OPEN", "MERGED", "DECLINED", "SUPERSEDED", ""]).describe("Bitbucket pull request status to wait for. Empty clears.");
 var COMMIT_ID = external_exports.string().describe("Bitbucket Git hash or workspace/repository@hash. Empty clears.");
 var COMMIT_STATUS = external_exports.enum(["INPROGRESS", "SUCCESSFUL", "FAILED", "STOPPED", ""]).describe("Bitbucket commit build status to wait for. Empty clears.");
+var MAX_PASSES = external_exports.number().int().min(0).max(2147483647).describe("Number of first-branch passes for a limiter. Changing it refills the counter.");
 var SPOT = external_exports.object({
   x: external_exports.number().int().min(0).describe("Canvas x in pixels."),
   y: external_exports.number().int().min(0).describe("Canvas y in pixels.")
@@ -21944,7 +21946,7 @@ var SPOT = external_exports.object({
 var STATUS = external_exports.enum(["draft", "ready", "todo", "blocked", "running", "waiting-refresh", "interrupted", "done", "error"]).describe("Work state; ready offers Play. Never manufacture running or waiting-refresh.");
 var ON_SUCCESS = external_exports.object({
   flowNode: external_exports.string().optional().describe("Single successor card id; empty unlinks."),
-  flowNodes: external_exports.array(external_exports.string()).optional().describe("Gateway successor ids."),
+  flowNodes: external_exports.array(external_exports.string()).optional().describe("Gateway successor ids. For a limiter, in first- and second-branch order."),
   mode: external_exports.enum(["end", "continue"]).optional().describe("AI conversation handover; default end."),
   compact: external_exports.boolean().optional().describe("Compact the AI conversation after success.")
 }).strict().describe("Whole replacement; preserve other options. See hybridflow references/chains.md.");
@@ -21977,6 +21979,7 @@ var CARD_FIELDS = {
   pullRequestStatus: PULL_REQUEST_STATUS.optional(),
   commitId: COMMIT_ID.optional(),
   commitStatus: COMMIT_STATUS.optional(),
+  maxPasses: MAX_PASSES.optional(),
   spot: SPOT.optional(),
   status: STATUS.optional(),
   archived: external_exports.boolean().optional().describe("Hide or restore the card."),
@@ -22041,6 +22044,7 @@ function registerHybridflowTools(server, hybridflow) {
       patch: external_exports.object({
         ...CARD_FIELDS,
         clearComplexity: external_exports.boolean().optional().describe("Clear the estimate."),
+        resetPasses: external_exports.boolean().optional().describe("Refill the limiter counter to its maximum."),
         clearSpot: external_exports.boolean().optional().describe("Clear the position."),
         classVersion: external_exports.string().optional().describe("Bind to a class version id; empty detaches.")
       }).strict().describe("Fields to change; omit unchanged fields."),
