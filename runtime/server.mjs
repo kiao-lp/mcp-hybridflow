@@ -21987,6 +21987,7 @@ var CARD_FIELDS = {
   valueType: VALUE_TYPE.optional(),
   roleId: ROLE_ID.optional(),
   people: PEOPLE.optional(),
+  description: external_exports.string().optional().describe("Short plain-text description of a Role card. An empty string clears it."),
   outputType: OUTPUT_TYPE.optional(),
   body: BODY.optional(),
   criteria: CRITERIA.optional(),
