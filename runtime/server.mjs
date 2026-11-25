@@ -21923,7 +21923,7 @@ var VALUE = external_exports.unknown().describe("Value card JSON payload.");
 var VALUE_TYPE = external_exports.string().describe('Value type: empty, "json-schema", or a same-board schema value id.');
 var OUTPUT_TYPE = external_exports.string().describe("Task schema id from board_schema_values; empty removes the schema. See hybridflow references/structured-data.md.");
 var TAGS = external_exports.array(external_exports.string()).describe("Tag words; whole replacement.");
-var BODY = external_exports.string().describe("Task description.");
+var BODY = external_exports.string().describe("Task description. Use {{currentWokflow.field}} to read shared values and currentWokflow.field fences to stage assignments. See hybridflow references/structured-data.md.");
 var CRITERIA = external_exports.array(external_exports.object({
   id: external_exports.string().optional().describe("Criterion id; minted if omitted."),
   text: external_exports.string().describe("Success criterion.")
@@ -21964,7 +21964,7 @@ var ON_SUCCESS = external_exports.object({
   compact: external_exports.boolean().optional().describe("Compact the AI conversation after success.")
 }).strict().describe("Whole replacement; preserve other options. See hybridflow references/chains.md.");
 var ROUTES = external_exports.array(external_exports.object({
-  condition: external_exports.string().describe("CEL expression that reads the predecessor JSON as input and returns a boolean."),
+  condition: external_exports.string().describe("CEL condition returning a boolean. Read predecessor JSON as input and workflow values as currentWokflow."),
   flowNode: external_exports.string().describe("Successor card id from onSuccess.flowNodes.")
 }).strict()).describe("Exclusive gateway routes. First true condition wins. Replaces the whole ordered list.");
 var IF_MATCH = external_exports.number().int().optional().describe("Revision from the read; send for derived writes. On 409, read again.");
@@ -21998,7 +21998,7 @@ var CARD_FIELDS = {
   archived: external_exports.boolean().optional().describe("Hide or restore the card."),
   onSuccess: ON_SUCCESS.optional(),
   routes: ROUTES.optional(),
-  workflow: external_exports.string().optional().describe("Workflow group id on this board; empty ungroups.")
+  workflow: external_exports.string().optional().describe("Workflow group id on this board. Members share currentWokflow values. Empty ungroups.")
 };
 function registerHybridflowTools(server, hybridflow) {
   server.registerTool("board_schema_values", {
@@ -22018,7 +22018,7 @@ function registerHybridflowTools(server, hybridflow) {
     }
   }, guard(async ({ name }) => ok(await hybridflow.createBoard(name))));
   server.registerTool("board_get", {
-    description: "Read a full board snapshot with cards, classes, workflows, revisions and cursor. Start edits here. The hybridflow skill provides design guidance and reference routing.",
+    description: "Read a board snapshot with cards, classes, workflows with saved values, revisions and cursor. Start edits here. See the hybridflow skill for design guidance.",
     inputSchema: { handle: HANDLE }
   }, guard(async ({ handle }) => ok(await hybridflow.getBoard(handle))));
   server.registerTool("board_patch", {
@@ -22096,7 +22096,7 @@ function registerHybridflowTools(server, hybridflow) {
     }
   }, guard(async ({ handle, name, flowNodes }) => ok(await hybridflow.createWorkflow(handle, { name, flowNodes }))));
   server.registerTool("workflow_get", {
-    description: "Read one workflow group.",
+    description: "Read a workflow with its id, name, revision and saved currentWokflow fields under values.",
     inputSchema: { handle: HANDLE, id: WORKFLOW_ID }
   }, guard(async ({ handle, id }) => ok(await hybridflow.getWorkflow(handle, id))));
   server.registerTool("workflow_copy", {
