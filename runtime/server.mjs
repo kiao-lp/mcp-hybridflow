@@ -21918,7 +21918,8 @@ var TYPE = external_exports.enum([
   "value"
 ]).describe("Card type. See hybridflow references/cards.md.");
 var CLASS_TYPE = external_exports.enum(["human", "ai", "shutdown", "scheduler"]);
-var NOTE = external_exports.string().describe("Note card Markdown.");
+var VALUE_REFERENCE = external_exports.string().regex(/\{\{\s*(input|currentWokflow|currentWorkflow)(?:\.[^{}\s]+)?\s*\}\}/);
+var NOTE = external_exports.string().describe("Note card Markdown. Use {{currentWorkflow.field}} to display shared values.");
 var VALUE = external_exports.unknown().describe("Value card JSON payload.");
 var VALUE_TYPE = external_exports.string().describe('Value type: empty, "json-schema", or a same-board schema value id.');
 var OUTPUT_TYPE = external_exports.string().describe("Task schema id from board_schema_values; empty removes the schema. See hybridflow references/structured-data.md.");
@@ -21941,16 +21942,16 @@ var SETTINGS = external_exports.object({
   agent: external_exports.string().optional().describe("Managed agent id from agent_list."),
   effort: external_exports.string().optional().describe("Effort supported by the selected harness."),
   permission: external_exports.string().optional().describe("Permission mode supported by the selected harness."),
-  folder: external_exports.string().optional().describe("Store-root folder link, starting with /."),
+  folder: external_exports.string().optional().describe("Store-root folder link or value reference such as {{input.folder}}."),
   runner: external_exports.string().optional().describe("Optional runner id from runner_list."),
   extra: external_exports.record(external_exports.string()).optional().describe("Preserved extension settings.")
 }).strict().describe("Execution settings; whole replacement, including runner and extra.");
-var AT = external_exports.string().describe("Scheduler local YYYY-MM-DDTHH:mm; alternative to duration. Empty clears.");
-var DURATION = external_exports.string().describe("Scheduler positive h/m/s/ms wait, e.g. 15m; alternative to at. Empty clears.");
-var PULL_REQUEST_ID = external_exports.string().describe("Bitbucket pull request number or workspace/repository#number. Empty clears.");
-var PULL_REQUEST_STATUS = external_exports.enum(["OPEN", "MERGED", "DECLINED", "SUPERSEDED", ""]).describe("Bitbucket pull request status to wait for. Empty clears.");
-var COMMIT_ID = external_exports.string().describe("Bitbucket Git hash or workspace/repository@hash. Empty clears.");
-var COMMIT_STATUS = external_exports.enum(["INPROGRESS", "SUCCESSFUL", "FAILED", "STOPPED", ""]).describe("Bitbucket commit build status to wait for. Empty clears.");
+var AT = external_exports.string().describe("Scheduler local YYYY-MM-DDTHH:mm or value reference. Alternative to duration. Empty clears.");
+var DURATION = external_exports.string().describe("Scheduler positive h/m/s/ms wait or value reference. Alternative to at. Empty clears.");
+var PULL_REQUEST_ID = external_exports.string().describe("Bitbucket PR number, workspace/repository#number or value reference. Empty clears.");
+var PULL_REQUEST_STATUS = external_exports.union([external_exports.enum(["OPEN", "MERGED", "DECLINED", "SUPERSEDED", ""]), VALUE_REFERENCE]).describe("Bitbucket pull request status to wait for, or value reference. Empty clears.");
+var COMMIT_ID = external_exports.string().describe("Bitbucket Git hash, workspace/repository@hash or value reference. Empty clears.");
+var COMMIT_STATUS = external_exports.union([external_exports.enum(["INPROGRESS", "SUCCESSFUL", "FAILED", "STOPPED", ""]), VALUE_REFERENCE]).describe("Bitbucket commit build status to wait for, or value reference. Empty clears.");
 var MAX_PASSES = external_exports.number().int().min(0).max(2147483647).describe("Number of first-branch passes for a limiter. Changing it refills the counter.");
 var SPOT = external_exports.object({
   x: external_exports.number().int().min(0).describe("Canvas x in pixels."),
