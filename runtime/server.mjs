@@ -22111,7 +22111,13 @@ function registerHybridflowTools(server, hybridflow) {
       clipboard: external_exports.object({
         kind: external_exports.literal("kiao-workflow"),
         version: external_exports.literal(1),
-        workflow: external_exports.object({ name: external_exports.string() }).strict(),
+        workflow: external_exports.object({
+          name: external_exports.string(),
+          // Keep every key of the stored JSON object.
+          values: external_exports.custom(
+            (value) => value !== null && typeof value === "object" && !Array.isArray(value)
+          ).optional().describe("Saved currentWorkflow values as a JSON object.")
+        }).strict(),
         flowNodes: external_exports.array(external_exports.object({ id: external_exports.string() }).passthrough())
       }).strict().describe("The complete JSON object from workflow_copy or Dashboard Copy workflow as JSON."),
       spot: SPOT.optional().describe("Preferred top-left position in canvas pixels. Omit to place below existing cards.")
