@@ -21915,13 +21915,16 @@ var TYPE = external_exports.enum([
   "exclusive-gateway",
   "limiter",
   "note",
-  "value"
+  "value",
+  "role"
 ]).describe("Card type. See hybridflow references/cards.md.");
 var CLASS_TYPE = external_exports.enum(["human", "ai", "shutdown", "scheduler"]);
-var VALUE_REFERENCE = external_exports.string().regex(/\{\{\s*(input|currentWokflow|currentWorkflow)(?:\.[^{}\s]+)?\s*\}\}/);
-var NOTE = external_exports.string().describe("Note card Markdown. Use {{currentWorkflow.field}} to display shared values.");
+var VALUE_REFERENCE = external_exports.string().regex(/\{\{\s*(?:(?:input|currentWokflow|currentWorkflow)(?:\.[^{}\s]+)?|role\.[A-Za-z0-9_-]+)\s*\}\}/);
+var NOTE = external_exports.string().describe("Note card Markdown. Use {{currentWorkflow.field}} or {{role.ID}}.");
 var VALUE = external_exports.unknown().describe("Value card JSON payload.");
 var VALUE_TYPE = external_exports.string().describe('Value type: empty, "json-schema", or a same-board schema value id.');
+var ROLE_ID = external_exports.string().describe("Board-local Role ID for {{role.ID}}. Letters A\u2013Z, digits, underscores and hyphens. Empty clears.");
+var PEOPLE = external_exports.array(external_exports.string()).describe("People on a Role card, one plain-text line per entry. Whole replacement.");
 var OUTPUT_TYPE = external_exports.string().describe("Task schema id from board_schema_values; empty removes the schema. See hybridflow references/structured-data.md.");
 var TAGS = external_exports.array(external_exports.string()).describe("Tag words; whole replacement.");
 var BODY = external_exports.string().describe("Task description. Use {{currentWokflow.field}} to read shared values and currentWokflow.field fences to stage assignments. See hybridflow references/structured-data.md.");
@@ -21965,7 +21968,7 @@ var ON_SUCCESS = external_exports.object({
   compact: external_exports.boolean().optional().describe("Compact the AI conversation after success.")
 }).strict().describe("Whole replacement; preserve other options. See hybridflow references/chains.md.");
 var ROUTES = external_exports.array(external_exports.object({
-  condition: external_exports.string().describe("CEL condition returning a boolean. Read predecessor JSON as input and workflow values as currentWokflow."),
+  condition: external_exports.string().describe("CEL condition returning a boolean. Read input, currentWorkflow and role.ID."),
   flowNode: external_exports.string().describe("Successor card id from onSuccess.flowNodes.")
 }).strict()).describe("Exclusive gateway routes. First true condition wins. Replaces the whole ordered list.");
 var IF_MATCH = external_exports.number().int().optional().describe("Revision from the read; send for derived writes. On 409, read again.");
@@ -21982,6 +21985,8 @@ var CARD_FIELDS = {
   note: NOTE.optional(),
   value: VALUE.optional(),
   valueType: VALUE_TYPE.optional(),
+  roleId: ROLE_ID.optional(),
+  people: PEOPLE.optional(),
   outputType: OUTPUT_TYPE.optional(),
   body: BODY.optional(),
   criteria: CRITERIA.optional(),
