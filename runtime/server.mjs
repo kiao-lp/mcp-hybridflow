@@ -21907,6 +21907,7 @@ var AGENT_ID = external_exports.string().describe("Managed agent id from agent_l
 var TYPE = external_exports.enum([
   "human",
   "ai",
+  "start",
   "shutdown",
   "scheduler",
   "bitbucket-pr-status",
