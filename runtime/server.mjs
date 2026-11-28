@@ -21398,81 +21398,8 @@ var WorkerClient = class _WorkerClient {
       `${_WorkerClient.boardPath(handle)}/flow-nodes/${encodeURIComponent(id)}/usage`
     );
   }
-  convertFlowNodeToClass(handle, id) {
-    return this.boardsJson(
-      "POST",
-      `${_WorkerClient.boardPath(handle)}/flow-nodes/${encodeURIComponent(id)}/to-class`,
-      {}
-    );
-  }
   listSchemaValues() {
     return this.boardsJson("GET", "/hybridflow-runner/schema-values");
-  }
-  listFlowNodeClasses() {
-    return this.boardsJson("GET", "/hybridflow-runner/flow-node-classes");
-  }
-  createFlowNodeClass(handle, flowNodeClass) {
-    return this.boardsJson(
-      "POST",
-      `${_WorkerClient.boardPath(handle)}/flow-node-classes`,
-      flowNodeClass
-    );
-  }
-  getFlowNodeClass(handle, id) {
-    return this.boardsJson(
-      "GET",
-      `${_WorkerClient.boardPath(handle)}/flow-node-classes/${encodeURIComponent(id)}`
-    );
-  }
-  patchFlowNodeClass(handle, id, patch, ifMatch) {
-    return this.boardsJson(
-      "PATCH",
-      `${_WorkerClient.boardPath(handle)}/flow-node-classes/${encodeURIComponent(id)}`,
-      patch,
-      _WorkerClient.ifMatch(ifMatch)
-    );
-  }
-  deleteFlowNodeClasses(handle, flowNodeClasses) {
-    return this.boardsVoid(
-      "DELETE",
-      `${_WorkerClient.boardPath(handle)}/flow-node-classes`,
-      { flowNodeClasses }
-    );
-  }
-  chainFlowNodeClass(handle, id, flowNode) {
-    return this.boardsJson(
-      "POST",
-      `${_WorkerClient.boardPath(handle)}/flow-node-classes/${encodeURIComponent(id)}/chain`,
-      { flowNode }
-    );
-  }
-  createClassVersion(handle, classId, version2) {
-    return this.boardsJson(
-      "POST",
-      `${_WorkerClient.boardPath(handle)}/flow-node-classes/${encodeURIComponent(classId)}/versions`,
-      version2
-    );
-  }
-  patchClassVersion(handle, classId, versionId, patch, ifMatch) {
-    return this.boardsJson(
-      "PATCH",
-      `${_WorkerClient.boardPath(handle)}/flow-node-classes/${encodeURIComponent(classId)}/versions/${encodeURIComponent(versionId)}`,
-      patch,
-      _WorkerClient.ifMatch(ifMatch)
-    );
-  }
-  deleteClassVersion(handle, classId, versionId) {
-    return this.boardsVoid(
-      "DELETE",
-      `${_WorkerClient.boardPath(handle)}/flow-node-classes/${encodeURIComponent(classId)}/versions/${encodeURIComponent(versionId)}`
-    );
-  }
-  instantiateFlowNodeClass(handle, classId, request) {
-    return this.boardsJson(
-      "POST",
-      `${_WorkerClient.boardPath(handle)}/flow-node-classes/${encodeURIComponent(classId)}/instantiate`,
-      request
-    );
   }
   createWorkflow(handle, workflow) {
     return this.boardsJson(
@@ -21510,47 +21437,6 @@ var WorkerClient = class _WorkerClient {
   }
   deleteWorkflows(handle, workflows) {
     return this.boardsVoid("DELETE", `${_WorkerClient.boardPath(handle)}/workflows`, { workflows });
-  }
-  listWorkflowClasses() {
-    return this.boardsJson(
-      "GET",
-      "/hybridflow-runner/workflow-classes"
-    );
-  }
-  createWorkflowClass(handle, workflowClass) {
-    return this.boardsJson(
-      "POST",
-      `${_WorkerClient.boardPath(handle)}/workflow-classes`,
-      workflowClass
-    );
-  }
-  getWorkflowClass(handle, id) {
-    return this.boardsJson(
-      "GET",
-      `${_WorkerClient.boardPath(handle)}/workflow-classes/${encodeURIComponent(id)}`
-    );
-  }
-  patchWorkflowClass(handle, id, patch, ifMatch) {
-    return this.boardsJson(
-      "PATCH",
-      `${_WorkerClient.boardPath(handle)}/workflow-classes/${encodeURIComponent(id)}`,
-      patch,
-      _WorkerClient.ifMatch(ifMatch)
-    );
-  }
-  deleteWorkflowClasses(handle, workflowClasses) {
-    return this.boardsVoid(
-      "DELETE",
-      `${_WorkerClient.boardPath(handle)}/workflow-classes`,
-      { workflowClasses }
-    );
-  }
-  instantiateWorkflowClass(handle, id, request) {
-    return this.boardsJson(
-      "POST",
-      `${_WorkerClient.boardPath(handle)}/workflow-classes/${encodeURIComponent(id)}/instantiate`,
-      request
-    );
   }
   listAgents() {
     return this.boardsJson("GET", "/hybridflow-runner/agents");
@@ -21900,8 +21786,6 @@ var guard = (fn) => async (args) => {
 // src/tools-hybridflow.ts
 var HANDLE = external_exports.string().describe("Board slug or id from board_list/board_create.");
 var CARD_ID = external_exports.string().describe("Card id from board_get.");
-var CLASS_ID = external_exports.string().describe("Node class id from board_get/class_list.");
-var VERSION_ID = external_exports.string().describe("Version id from class_get.");
 var WORKFLOW_ID = external_exports.string().describe("Workflow id from board_get.");
 var AGENT_ID = external_exports.string().describe("Managed agent id from agent_list.");
 var TYPE = external_exports.enum([
@@ -21919,7 +21803,6 @@ var TYPE = external_exports.enum([
   "value",
   "role"
 ]).describe("Card type. See hybridflow references/cards.md.");
-var CLASS_TYPE = external_exports.enum(["human", "ai", "shutdown", "scheduler"]);
 var VALUE_REFERENCE = external_exports.string().regex(/\{\{\s*(?:(?:input|currentWokflow|currentWorkflow)(?:\.[^{}\s]+)?|role\.[A-Za-z0-9_-]+)\s*\}\}/);
 var NOTE = external_exports.string().describe("Note card Markdown. Use {{currentWorkflow.field}} or {{role.ID}}.");
 var VALUE = external_exports.unknown().describe("Value card JSON payload.");
@@ -21973,12 +21856,6 @@ var ROUTES = external_exports.array(external_exports.object({
   flowNode: external_exports.string().describe("Successor card id from onSuccess.flowNodes.")
 }).strict()).describe("Exclusive gateway routes. First true condition wins. Replaces the whole ordered list.");
 var IF_MATCH = external_exports.number().int().optional().describe("Revision from the read; send for derived writes. On 409, read again.");
-var CLASS_ON_SUCCESS = external_exports.object({
-  flowNode: external_exports.string().optional().describe("Successor class id, never a version or card id."),
-  mode: external_exports.enum(["end", "continue"]).optional().describe("AI instance conversation handover."),
-  compact: external_exports.boolean().optional().describe("Compact the AI instance conversation after success.")
-}).strict().describe("Class successor and conversation options; whole replacement.");
-var BODIES = external_exports.record(external_exports.string()).optional().describe("Filled template bodies by class id.");
 var CARD_FIELDS = {
   title: external_exports.string().optional().describe("Card name; AI prompt fallback if body is empty."),
   type: TYPE.optional(),
@@ -21991,6 +21868,7 @@ var CARD_FIELDS = {
   description: external_exports.string().optional().describe("Short plain-text description of a Role card. An empty string clears it."),
   outputType: OUTPUT_TYPE.optional(),
   body: BODY.optional(),
+  multiPartTemplate: external_exports.boolean().optional().describe("Treat the task body as a multi-part TemplateLang template when copied for instantiation."),
   criteria: CRITERIA.optional(),
   complexity: COMPLEXITY.optional(),
   settings: SETTINGS.optional(),
@@ -22026,7 +21904,7 @@ function registerHybridflowTools(server, hybridflow) {
     }
   }, guard(async ({ name }) => ok(await hybridflow.createBoard(name))));
   server.registerTool("board_get", {
-    description: "Read a board snapshot with cards, classes, workflows with saved values, revisions and cursor. Start edits here. See the hybridflow skill for design guidance.",
+    description: "Read a board snapshot with cards, workflows with saved values, revisions and cursor. Start edits here. See the hybridflow skill for design guidance.",
     inputSchema: { handle: HANDLE }
   }, guard(async ({ handle }) => ok(await hybridflow.getBoard(handle))));
   server.registerTool("board_patch", {
@@ -22039,7 +21917,7 @@ function registerHybridflowTools(server, hybridflow) {
     }
   }, guard(async ({ handle, name, archive, ifMatch }) => ok(await hybridflow.patchBoard(handle, { name, archive }, ifMatch))));
   server.registerTool("board_delete", {
-    description: "Permanently delete the board and all its cards, classes, versions and workflow groups.",
+    description: "Permanently delete the board and its cards and workflows.",
     inputSchema: { handle: HANDLE }
   }, guard(async ({ handle }) => ok(await hybridflow.deleteBoard(handle))));
   server.registerTool("board_add_cards", {
@@ -22066,8 +21944,7 @@ function registerHybridflowTools(server, hybridflow) {
         ...CARD_FIELDS,
         clearComplexity: external_exports.boolean().optional().describe("Clear the estimate."),
         resetPasses: external_exports.boolean().optional().describe("Refill the limiter counter to its maximum."),
-        clearSpot: external_exports.boolean().optional().describe("Clear the position."),
-        classVersion: external_exports.string().optional().describe("Bind to a class version id; empty detaches.")
+        clearSpot: external_exports.boolean().optional().describe("Clear the position.")
       }).strict().describe("Fields to change; omit unchanged fields."),
       ifMatch: IF_MATCH
     }
@@ -22091,10 +21968,6 @@ function registerHybridflowTools(server, hybridflow) {
     description: "Read accumulated card usage reports, token counts and known costs.",
     inputSchema: { handle: HANDLE, id: CARD_ID }
   }, guard(async ({ handle, id }) => ok(await hybridflow.getFlowNodeUsage(handle, id))));
-  server.registerTool("board_card_to_class", {
-    description: "Create a reusable node class and first version from an AI or Human task.",
-    inputSchema: { handle: HANDLE, id: CARD_ID }
-  }, guard(async ({ handle, id }) => ok(await hybridflow.convertFlowNodeToClass(handle, id))));
   server.registerTool("workflow_create", {
     description: "Create a workflow group and assign cards. Already-grouped cards move into it.",
     inputSchema: {
@@ -22146,159 +22019,6 @@ function registerHybridflowTools(server, hybridflow) {
       workflows: external_exports.array(external_exports.string()).describe("The workflow ids to remove.")
     }
   }, guard(async ({ handle, workflows }) => ok(await hybridflow.deleteWorkflows(handle, workflows))));
-  server.registerTool("workflow_class_list", {
-    description: "List workflow classes across boards.",
-    inputSchema: {}
-  }, guard(async () => ok(await hybridflow.listWorkflowClasses())));
-  server.registerTool("workflow_class_create", {
-    description: "Create a workflow class and assign node classes to it.",
-    inputSchema: {
-      handle: HANDLE,
-      name: external_exports.string().optional().describe("Workflow class name."),
-      classes: external_exports.array(external_exports.string()).optional().describe("Member class ids on this board.")
-    }
-  }, guard(async ({ handle, name, classes }) => ok(await hybridflow.createWorkflowClass(handle, { name, classes }))));
-  server.registerTool("workflow_class_get", {
-    description: "Read one workflow class.",
-    inputSchema: {
-      handle: HANDLE,
-      id: external_exports.string().describe("Workflow class id from board_get.")
-    }
-  }, guard(async ({ handle, id }) => ok(await hybridflow.getWorkflowClass(handle, id))));
-  server.registerTool("workflow_class_patch", {
-    description: "Rename a workflow class without changing membership.",
-    inputSchema: {
-      handle: HANDLE,
-      id: external_exports.string().describe("Workflow class id from board_get."),
-      name: external_exports.string().describe("New name."),
-      ifMatch: IF_MATCH
-    }
-  }, guard(async ({ handle, id, name, ifMatch }) => ok(await hybridflow.patchWorkflowClass(handle, id, { name }, ifMatch))));
-  server.registerTool("workflow_class_delete", {
-    description: "Delete workflow classes and retain their ungrouped node classes.",
-    inputSchema: {
-      handle: HANDLE,
-      workflowClasses: external_exports.array(external_exports.string()).describe("The workflow class ids to remove.")
-    }
-  }, guard(async ({ handle, workflowClasses }) => ok(await hybridflow.deleteWorkflowClasses(handle, workflowClasses))));
-  server.registerTool("workflow_class_instantiate", {
-    description: "Instantiate workflow class members on the destination board. Complete task settings and schemas afterward; see hybridflow references/reuse/workflows.md.",
-    inputSchema: {
-      handle: HANDLE,
-      id: external_exports.string().describe("Source workflow class id from workflow_class_list."),
-      spot: SPOT.optional(),
-      bodies: BODIES,
-      agents: external_exports.record(external_exports.string(), AGENT_ID).optional().describe("Explicit task agent IDs keyed by source class ID.")
-    }
-  }, guard(async ({ handle, id, spot, bodies, agents }) => ok(await hybridflow.instantiateWorkflowClass(handle, id, { spot, bodies, agents }))));
-  server.registerTool("class_list", {
-    description: "List node classes across boards; use class_get for versions.",
-    inputSchema: {}
-  }, guard(async () => ok(await hybridflow.listFlowNodeClasses())));
-  server.registerTool("class_create", {
-    description: "Create a node class and its first version. Shared fields, version fields and instance settings: hybridflow references/classes.md.",
-    inputSchema: {
-      handle: HANDLE,
-      title: external_exports.string().describe("Class title."),
-      instantiable: external_exports.boolean().optional().describe("Offer in the Instantiate menu; default false."),
-      type: CLASS_TYPE.optional(),
-      tags: TAGS.optional(),
-      body: external_exports.string().optional().describe("First version description."),
-      criteria: CRITERIA.optional(),
-      template: external_exports.boolean().optional().describe("First version is a fill-in template."),
-      at: AT.optional(),
-      duration: DURATION.optional(),
-      spot: SPOT.optional(),
-      permission: external_exports.string().optional().describe("AI instance permission mode."),
-      runner: external_exports.string().optional().describe("AI instance runner id, or empty."),
-      note: external_exports.string().optional().describe("Class guidance; not copied to instances."),
-      onSuccess: CLASS_ON_SUCCESS.optional(),
-      published: external_exports.boolean().optional().describe("Publish the first version immediately."),
-      workflowClass: external_exports.string().optional().describe("Workflow class group id on this board.")
-    }
-  }, guard(async ({ handle, ...rest }) => ok(await hybridflow.createFlowNodeClass(handle, rest))));
-  server.registerTool("class_get", {
-    description: "Read a node class and its versions, oldest first, with independent revisions.",
-    inputSchema: { handle: HANDLE, id: CLASS_ID }
-  }, guard(async ({ handle, id }) => ok(await hybridflow.getFlowNodeClass(handle, id))));
-  server.registerTool("class_patch", {
-    description: "Patch class fields. Edit draft wording with class_patch_version; published wording requires a new version.",
-    inputSchema: {
-      handle: HANDLE,
-      id: CLASS_ID,
-      patch: external_exports.object({
-        title: external_exports.string().optional().describe("New title."),
-        instantiable: external_exports.boolean().optional().describe("Offer the class in the Instantiate menu."),
-        type: CLASS_TYPE.optional(),
-        tags: external_exports.array(external_exports.string()).optional().describe("Tag words; whole replacement."),
-        at: external_exports.string().optional().describe("New Scheduler datetime; nonempty clears duration."),
-        duration: DURATION.optional(),
-        onSuccess: CLASS_ON_SUCCESS.optional(),
-        permission: external_exports.string().optional().describe("AI instance permission mode."),
-        runner: external_exports.string().optional().describe("AI instance runner id."),
-        note: external_exports.string().optional().describe("New note."),
-        spot: SPOT.optional(),
-        clearSpot: external_exports.boolean().optional().describe("Takes the class off the board."),
-        workflowClass: external_exports.string().optional().describe("Workflow class group id; empty ungroups.")
-      }).strict().describe("The fields to change."),
-      ifMatch: IF_MATCH
-    }
-  }, guard(async ({ handle, id, patch, ifMatch }) => ok(await hybridflow.patchFlowNodeClass(handle, id, patch, ifMatch))));
-  server.registerTool("class_delete", {
-    description: "Permanently delete node classes and their versions.",
-    inputSchema: {
-      handle: HANDLE,
-      flowNodeClasses: external_exports.array(external_exports.string()).describe("The class ids to remove.")
-    }
-  }, guard(async ({ handle, flowNodeClasses }) => ok(await hybridflow.deleteFlowNodeClasses(handle, flowNodeClasses))));
-  server.registerTool("class_chain", {
-    description: "Link to a successor class id; an empty target unlinks. Never pass a version or card id.",
-    inputSchema: {
-      handle: HANDLE,
-      id: CLASS_ID,
-      flowNode: external_exports.string().describe("Successor class id; empty unlinks.")
-    }
-  }, guard(async ({ handle, id, flowNode }) => ok(await hybridflow.chainFlowNodeClass(handle, id, flowNode))));
-  server.registerTool("class_create_version", {
-    description: "Create a draft version, optionally copied from an existing version.",
-    inputSchema: {
-      handle: HANDLE,
-      id: CLASS_ID,
-      body: external_exports.string().optional().describe("The description."),
-      criteria: CRITERIA.optional(),
-      template: external_exports.boolean().optional().describe("Fill body during instantiation."),
-      from: external_exports.string().optional().describe("Source version id; omit for a blank draft.")
-    }
-  }, guard(async ({ handle, id, body, criteria, template, from }) => ok(await hybridflow.createClassVersion(handle, id, { body, criteria, template, from }))));
-  server.registerTool("class_patch_version", {
-    description: "Patch or publish a draft version. Published versions are immutable.",
-    inputSchema: {
-      handle: HANDLE,
-      id: CLASS_ID,
-      versionId: VERSION_ID,
-      patch: external_exports.object({
-        body: external_exports.string().optional().describe("New description."),
-        criteria: CRITERIA.optional(),
-        template: external_exports.boolean().optional().describe("Fill body during instantiation."),
-        status: external_exports.enum(["draft", "published"]).optional().describe("Publish the version.")
-      }).strict().describe("The fields to change."),
-      ifMatch: IF_MATCH
-    }
-  }, guard(async ({ handle, id, versionId, patch, ifMatch }) => ok(await hybridflow.patchClassVersion(handle, id, versionId, patch, ifMatch))));
-  server.registerTool("class_delete_version", {
-    description: "Permanently delete one class version.",
-    inputSchema: { handle: HANDLE, id: CLASS_ID, versionId: VERSION_ID }
-  }, guard(async ({ handle, id, versionId }) => ok(await hybridflow.deleteClassVersion(handle, id, versionId))));
-  server.registerTool("class_instantiate", {
-    description: "Instantiate a class and its successors on the destination board. Complete task settings and schemas afterward; see hybridflow references/classes.md.",
-    inputSchema: {
-      handle: HANDLE,
-      id: CLASS_ID,
-      spot: SPOT.optional(),
-      bodies: BODIES,
-      agents: external_exports.record(external_exports.string(), AGENT_ID).optional().describe("Explicit task agent IDs keyed by source class ID.")
-    }
-  }, guard(async ({ handle, id, spot, bodies, agents }) => ok(await hybridflow.instantiateFlowNodeClass(handle, id, { spot, bodies, agents }))));
   server.registerTool("agent_list", {
     description: "List installed agent repositories and latest publications. Select using the published description.",
     inputSchema: {}
@@ -22410,7 +22130,7 @@ var HybridflowApi = class _HybridflowApi {
     if (!trimmed) throw new Error("Board name must not be empty.");
     return this.files.createBoard(trimmed);
   }
-  /** Read one board whole — its cards, its classes, its workflows — and the cursor it was read at. */
+  /** Read one board whole — its cards and workflows — and the cursor it was read at. */
   async getBoard(handle) {
     return this.files.getBoard(_HybridflowApi.handle(handle));
   }
@@ -22475,92 +22195,6 @@ var HybridflowApi = class _HybridflowApi {
   async getFlowNodeUsage(handle, id) {
     return this.files.getFlowNodeUsage(_HybridflowApi.handle(handle), _HybridflowApi.id(id, "Card"));
   }
-  /** File a class from a task: the card's title, kind and answers become the class's. */
-  async convertFlowNodeToClass(handle, id) {
-    return this.files.convertFlowNodeToClass(_HybridflowApi.handle(handle), _HybridflowApi.id(id, "Card"));
-  }
-  /** Every node class of every board: what the instantiate menu lists. */
-  async listFlowNodeClasses() {
-    return this.files.listFlowNodeClasses();
-  }
-  /** File a node class on a board, with its first version's words beside it. */
-  async createFlowNodeClass(handle, flowNodeClass) {
-    const title = flowNodeClass.title?.trim();
-    if (!title) throw new Error("A class needs a title.");
-    return this.files.createFlowNodeClass(
-      _HybridflowApi.handle(handle),
-      { ...flowNodeClass, title }
-    );
-  }
-  /** Read one node class, with its succession beneath it. */
-  async getFlowNodeClass(handle, id) {
-    return this.files.getFlowNodeClass(_HybridflowApi.handle(handle), _HybridflowApi.id(id, "Class"));
-  }
-  /** Change a class's own fields — never its versions': a new description is a new version. */
-  async patchFlowNodeClass(handle, id, patch, ifMatch) {
-    if (!patch || Object.keys(patch).length === 0) {
-      throw new Error("class_patch names the fields it changes \u2014 send at least one.");
-    }
-    return this.files.patchFlowNodeClass(
-      _HybridflowApi.handle(handle),
-      _HybridflowApi.id(id, "Class"),
-      patch,
-      ifMatch
-    );
-  }
-  /** Remove classes and their versions. */
-  async deleteFlowNodeClasses(handle, flowNodeClasses) {
-    const ids = _HybridflowApi.ids(flowNodeClasses, "class_delete needs at least one class id.");
-    await this.files.deleteFlowNodeClasses(_HybridflowApi.handle(handle), ids);
-    return { deleted: ids };
-  }
-  /** Link a class to the class after it; an empty target takes the link off. */
-  async chainFlowNodeClass(handle, id, flowNode) {
-    return this.files.chainFlowNodeClass(
-      _HybridflowApi.handle(handle),
-      _HybridflowApi.id(id, "Class"),
-      flowNode.trim()
-    );
-  }
-  /** File one version under its class — blank, or copied from the version `from` names. */
-  async createClassVersion(handle, classId, version2) {
-    return this.files.createClassVersion(
-      _HybridflowApi.handle(handle),
-      _HybridflowApi.id(classId, "Class"),
-      version2
-    );
-  }
-  /** Change what a draft says, or publish it. A published version is refused whatever is sent. */
-  async patchClassVersion(handle, classId, versionId, patch, ifMatch) {
-    if (!patch || Object.keys(patch).length === 0) {
-      throw new Error("class_patch_version names the fields it changes \u2014 send at least one.");
-    }
-    return this.files.patchClassVersion(
-      _HybridflowApi.handle(handle),
-      _HybridflowApi.id(classId, "Class"),
-      _HybridflowApi.id(versionId, "Version"),
-      patch,
-      ifMatch
-    );
-  }
-  /** Delete one class version. */
-  async deleteClassVersion(handle, classId, versionId) {
-    const trimmed = _HybridflowApi.id(versionId, "Version");
-    await this.files.deleteClassVersion(
-      _HybridflowApi.handle(handle),
-      _HybridflowApi.id(classId, "Class"),
-      trimmed
-    );
-    return { deleted: trimmed };
-  }
-  /** Make flow nodes from a class and all its successors, on the board the handle names. */
-  async instantiateFlowNodeClass(handle, classId, request) {
-    return this.files.instantiateFlowNodeClass(
-      _HybridflowApi.handle(handle),
-      _HybridflowApi.id(classId, "Class"),
-      request
-    );
-  }
   /** File a workflow on a board and group its cards in it. */
   async createWorkflow(handle, workflow) {
     return this.files.createWorkflow(_HybridflowApi.handle(handle), workflow);
@@ -22592,44 +22226,6 @@ var HybridflowApi = class _HybridflowApi {
     const ids = _HybridflowApi.ids(workflows, "workflow_delete needs at least one workflow id.");
     await this.files.deleteWorkflows(_HybridflowApi.handle(handle), ids);
     return { deleted: ids };
-  }
-  /** Every workflow class of every board. */
-  async listWorkflowClasses() {
-    return this.files.listWorkflowClasses();
-  }
-  /** File a workflow class on a board and group its classes in it. */
-  async createWorkflowClass(handle, workflowClass) {
-    return this.files.createWorkflowClass(_HybridflowApi.handle(handle), workflowClass);
-  }
-  /** Read one workflow class. */
-  async getWorkflowClass(handle, id) {
-    return this.files.getWorkflowClass(_HybridflowApi.handle(handle), _HybridflowApi.id(id, "Workflow class"));
-  }
-  /** Rename a workflow class. Its members are untouched. */
-  async patchWorkflowClass(handle, id, patch, ifMatch) {
-    if (!patch || Object.keys(patch).length === 0) {
-      throw new Error("workflow_class_patch names the fields it changes \u2014 send at least one.");
-    }
-    return this.files.patchWorkflowClass(
-      _HybridflowApi.handle(handle),
-      _HybridflowApi.id(id, "Workflow class"),
-      patch,
-      ifMatch
-    );
-  }
-  /** Remove workflow classes. Their classes are ungrouped and left where they are. */
-  async deleteWorkflowClasses(handle, workflowClasses) {
-    const ids = _HybridflowApi.ids(workflowClasses, "workflow_class_delete needs at least one workflow class id.");
-    await this.files.deleteWorkflowClasses(_HybridflowApi.handle(handle), ids);
-    return { deleted: ids };
-  }
-  /** Make a workflow from a workflow class, on the board the handle names. */
-  async instantiateWorkflowClass(handle, id, request) {
-    return this.files.instantiateWorkflowClass(
-      _HybridflowApi.handle(handle),
-      _HybridflowApi.id(id, "Workflow class"),
-      request
-    );
   }
   /** Every managed agent, by name. Read before naming one on a card. */
   async listAgents() {
