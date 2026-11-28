@@ -21212,7 +21212,7 @@ var WorkerClient = class _WorkerClient {
   }
   async checkStore() {
     const root = await this.getFileInfo("/");
-    if (!root?.isDirectory) throw new Error("The worker file API cannot read the store root.");
+    if (!root?.isDirectory) throw new Error("The worker file API cannot read the DCMS root.");
   }
   async getFileText(path) {
     const res = await this.req("/getFile", void 0, { path });
